@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -e
+if [[ -z $1 ]]
+then
+    dirs=$(ls -d */)
+else
+    dirs=$@
+fi
+
+for dir in ${dirs}
+do
+    echo "------------------------------------------------------------------"
+    pushd . > /dev/null
+    cd "${dir}"
+    echo "Changing working directory to ${dir}"
+    if [ -d .git ]
+    then
+        echo "${dir} is a Git source directory... issuing update commands."
+        git remote update --prune
+        git gc --aggressive
+        git checkout master
+        git rebase master origin/master
+    elif [ -d .hg ]
+    then
+        echo "${dir} is a Mercurial source directory... issuing update commands."
+        hg pull
+        hg update
+    elif [ -d .svn ]
+    then
+        echo "${dir} is a Subversion source directory... issuing update commands."
+        svn update
+    else
+        echo "${dir} was not a known SCM-based source directory.... skipping"
+    fi
+    echo "------------------------------------------------------------------"
+    popd > /dev/null
+done
